@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Accessory Program</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --ink: #1a1a18;
+    --paper: #f5f0e8;
+    --paper-dark: #ede8dc;
+    --accent: #c4622d;
+    --accent-light: #e8956a;
+    --accent-pale: #f5ddd1;
+    --muted: #7a7268;
+    --rule: #c8c2b4;
+    --green: #3d6b4f;
+    --green-pale: #d4e8db;
+    --blue: #2d4f8a;
+    --blue-pale: #d4dff0;
+    --gold: #8a6f2d;
+    --gold-pale: #f0e8d4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── MASTHEAD ── */
+  .masthead {
+    border-top: 3px solid var(--ink);
+    padding: 18px 0 14px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .overline {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(26px, 5vw, 42px);
+    line-height: 1.05;
+    color: var(--ink);
+  }
+
+  h1 em { font-style: italic; color: var(--accent); }
+
+  .masthead-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    color: var(--muted);
+    background: var(--paper-dark);
+  }
+
+  /* ── WEEK OVERVIEW ── */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin: 20px 0 28px;
+  }
+
+  .day-pill {
+    background: white;
+    border: 1.5px solid var(--rule);
+    border-radius: 4px;
+    padding: 8px 4px 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    user-select: none;
+  }
+
+  .day-pill:hover {
+    border-color: var(--accent-light);
+    background: var(--accent-pale);
+  }
+
+  .day-pill.active {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: white;
+  }
+
+  .day-pill-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: block;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+
+  .day-pill.active .day-pill-name { color: rgba(255,255,255,0.75); }
+
+  .day-pill-label {
+    font-family: 'DM Serif Display', serif;
+    font-size: 11px;
+    line-height: 1.2;
+    color: var(--ink);
+    display: block;
+  }
+
+  .day-pill.active .day-pill-label { color: white; }
+
+  .day-pill-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    margin: 4px auto 0;
+    background: transparent;
+  }
+
+  .day-pill.has-progress .day-pill-dot { background: var(--green); }
+  .day-pill.active.has-progress .day-pill-dot { background: rgba(255,255,255,0.6); }
+  .day-pill.complete .day-pill-dot { background: var(--green); }
+  .day-pill.active.complete .day-pill-dot { background: white; }
+
+  /* ── DAY PANEL ── */
+  .day-panel { display: none; }
+  .day-panel.active { display: block; }
+
+  .day-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 0 12px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .day-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+
+  .day-title em { font-style: italic; color: var(--accent); }
+
+  .day-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .day-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+
+  .badge-upper { background: var(--blue-pale); color: var(--blue); }
+  .badge-lower { background: var(--green-pale); color: var(--green); }
+  .badge-recovery { background: var(--gold-pale); color: var(--gold); }
+  .badge-full { background: var(--accent-pale); color: var(--accent); }
+
+  .day-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .day-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 140px;
+  }
+
+  .day-progress-bar {
+    flex: 1;
+    height: 3px;
+    background: var(--rule);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .day-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  .day-progress-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .day-intent {
+    background: var(--paper-dark);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.6;
+    margin-bottom: 18px;
+  }
+
+  /* ── BLOCK ── */
+  .block { margin-bottom: 24px; }
+
+  .block-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .block-icon {
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .block-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px;
+    color: var(--ink);
+  }
+
+  .block-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-left: auto;
+  }
+
+  /* ── EXERCISE CARDS ── */
+  .exercises { display: flex; flex-direction: column; gap: 7px; }
+
+  .exercise-card {
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+
+  .exercise-card:hover { border-color: var(--accent-light); }
+
+  .exercise-card.done { opacity: 0.5; }
+  .exercise-card.done .exercise-main { background: var(--paper-dark); }
+
+  .exercise-main {
+    display: grid;
+    grid-template-columns: 24px 1fr auto 16px;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s;
+  }
+
+  .exercise-main:hover { background: #fafaf8; }
+
+  .exercise-check {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--rule);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+
+  .exercise-card.done .exercise-check { background: var(--green); border-color: var(--green); }
+  .exercise-check svg { display: none; }
+  .exercise-card.done .exercise-check svg { display: block; }
+
+  .exercise-name {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .exercise-name .target {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+
+  .exercise-prescription { text-align: right; flex-shrink: 0; }
+
+  .prescription-main {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .prescription-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .expand-caret {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    transition: transform 0.15s;
+    text-align: center;
+  }
+
+  .exercise-card.open .expand-caret { transform: rotate(90deg); }
+
+  .exercise-expand {
+    border-top: 1px solid var(--rule);
+    padding: 10px 12px 10px 46px;
+    background: #fafaf8;
+    font-size: 12px;
+    color: #3a3830;
+    line-height: 1.65;
+    display: none;
+  }
+
+  .exercise-card.open .exercise-expand { display: block; }
+
+  .cue-list { margin: 5px 0 0 10px; list-style: none; }
+
+  .cue-list li {
+    position: relative;
+    padding-left: 12px;
+    margin-bottom: 3px;
+    font-size: 11.5px;
+  }
+
+  .cue-list li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--accent-light);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .benefit-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+
+  .chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+
+  .chip-inj { background: var(--accent-pale); color: var(--accent); }
+  .chip-perf { background: var(--blue-pale); color: var(--blue); }
+  .chip-mob { background: var(--green-pale); color: var(--green); }
+  .chip-bal { background: var(--gold-pale); color: var(--gold); }
+
+  /* ── PROGRESS BAR (sticky) ── */
+  .progress-strip {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 7px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 -20px 28px;
+  }
+
+  .progress-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--rule);
+    white-space: nowrap;
+  }
+
+  .progress-bar-wrap {
+    flex: 1;
+    height: 3px;
+    background: #3a3830;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  .progress-count {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px;
+    color: var(--accent-light);
+    white-space: nowrap;
+  }
+
+  .reset-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: none;
+    border: 1px solid #3a3830;
+    color: var(--muted);
+    padding: 3px 9px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .reset-btn:hover { border-color: var(--rule); color: var(--paper); }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 20px;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    align-items: center;
+  }
+
+  .legend-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-right: 3px;
+  }
+
+  /* ── FOOTER ── */
+  .footer-note {
+    margin-top: 40px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  @media (max-width: 600px) {
+    .week-grid { grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .day-pill-label { font-size: 9px; }
+    .day-pill-name { font-size: 8px; }
+    .masthead { flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-strip">
+  <span class="progress-label" id="stripDayLabel">Today</span>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressBar"></div>
+  </div>
+  <span class="progress-count"><span id="doneCount">0</span>/<span id="totalCount">0</span></span>
+  <button class="reset-btn" onclick="resetDay()">Reset day</button>
+</div>
+
+<div class="page-wrap">
+
+  <div class="masthead">
+    <div>
+      <div class="overline">Weekly Accessory Split · 30 min / day</div>
+      <h1>Movement <em>Medicine</em></h1>
+    </div>
+    <div class="masthead-tags">
+      <span class="tag">Volleyball</span>
+      <span class="tag">Running</span>
+      <span class="tag">Cycling</span>
+      <span class="tag">Lifting</span>
+    </div>
+  </div>
+
+  <!-- WEEK GRID NAV -->
+  <div class="week-grid">
+    <div class="day-pill active" onclick="switchDay(0)" id="pill-0">
+      <span class="day-pill-name">Mon</span>
+      <span class="day-pill-label">Upper A</span>
+      <div class="day-pill-dot"></div>
+    </div>
+    <div class="day-pill" onclick="switchDay(1)" id="pill-1">
+      <span class="day-pill-name">Tue</span>
+      <span class="day-pill-label">Lower A</span>
+      <div class="day-pill-dot"></div>
+    </div>
+    <div class="day-pill" onclick="switchDay(2)" id="pill-2">
+      <span class="day-pill-name">Wed</span>
+      <span class="day-pill-label">Recover</span>
+      <div class="day-pill-dot"></div>
+    </div>
+    <div class="day-pill" onclick="switchDay(3)" id="pill-3">
+      <span class="day-pill-name">Thu</span>
+      <span class="day-pill-label">Lower B</span>
+      <div class="day-pill-dot"></div>
+    </div>
+    <div class="day-pill" onclick="switchDay(4)" id="pill-4">
+      <span class="day-pill-name">Fri</span>
+      <span class="day-pill-label">Upper B</span>
+      <div class="day-pill-dot"></div>
+    </div>
+    <div class="day-pill" onclick="switchDay(5)" id="pill-5">
+      <span class="day-pill-name">Sat</span>
+      <span class="day-pill-label">Full Body</span>
+      <div class="day-pill-dot"></div>
+    </div>
+    <div class="day-pill" onclick="switchDay(6)" id="pill-6">
+      <span class="day-pill-name">Sun</span>
+      <span class="day-pill-label">Rest / Flex</span>
+      <div class="day-pill-dot"></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="legend-label">Key:</span>
+    <span class="chip chip-inj">Injury prevention</span>
+    <span class="chip chip-perf">Performance</span>
+    <span class="chip chip-mob">Mobility / Longevity</span>
+    <span class="chip chip-bal">Balance / Proprioception</span>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- DAY 0: MONDAY — UPPER A -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="day-panel active" id="day-0">
+    <div class="day-header">
+      <div>
+        <div class="day-title">Monday — <em>Upper A</em></div>
+        <div class="day-meta-row">
+          <span class="day-badge badge-upper">Neck · Shoulders · Wrists</span>
+          <span class="day-time">~28 min</span>
+        </div>
+      </div>
+      <div class="day-progress-wrap">
+        <div class="day-progress-bar"><div class="day-progress-fill" id="dpf-0"></div></div>
+        <span class="day-progress-label" id="dpl-0">0 / 0</span>
+      </div>
+    </div>
+    <div class="day-intent">Mobility first, then strength. Start with CARs to warm the joints, move into strengthening. Pairs well with a volleyball or upper-body lift day — run this before your session.</div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🔄</span>
+        <span class="block-title">Neck Mobility &amp; Strength</span>
+        <span class="block-meta">~10 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d0-e1">
+          <div class="exercise-main" onclick="toggleCard('d0-e1')">
+            <div class="exercise-check" onclick="toggleDone(event,'d0-e1',0)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Neck CARs<span class="target">Cervical spine · All planes</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 reps / side</div><div class="prescription-note">Slow &amp; deliberate</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Slowly rotate your head through its full range — forward, side, back, other side — making the circle as large as possible while keeping tension throughout.
+            <ul class="cue-list">
+              <li>Shoulders completely still and relaxed</li>
+              <li>Move into mild discomfort, not pain</li>
+              <li>Each full circle takes ~8–10 seconds</li>
+              <li>Reverse direction on second rep</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-mob">Cervical mobility</span><span class="chip chip-inj">Neck strain prevention</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d0-e2">
+          <div class="exercise-main" onclick="toggleCard('d0-e2')">
+            <div class="exercise-check" onclick="toggleDone(event,'d0-e2',0)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Chin Tuck + Neck Nod<span class="target">Deep cervical flexors · Craniocervical alignment</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 12 reps</div><div class="prescription-note">Supine (lying on back)</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Lie on your back, knees bent. Draw your chin straight back ("double chin"), then slowly nod your head yes — lifting only the top of your skull. Directly strengthens the deep stabilizers weakened by forward head posture.
+            <ul class="cue-list">
+              <li>Chin tuck is a glide backward, not a crunch downward</li>
+              <li>The nod range is tiny — 10–15° at most</li>
+              <li>Think: lengthen the back of your neck, not shorten the front</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Forward head posture correction</span><span class="chip chip-mob">Cervical stability</span><span class="chip chip-perf">Cycling / running posture</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d0-e3">
+          <div class="exercise-main" onclick="toggleCard('d0-e3')">
+            <div class="exercise-check" onclick="toggleDone(event,'d0-e3',0)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Isometric Neck Holds (4 Directions)<span class="target">Deep cervical flexors · SCM · Extensors · Lateral flexors</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 10 sec each</div><div class="prescription-note">Hand vs. head</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Press your palm against your head and resist with your neck — no movement. Four directions: forward (chin to chest resist), backward, and both sides (ear to shoulder resist).
+            <ul class="cue-list">
+              <li>~70% of max effort — hard work, not a fight</li>
+              <li>Keep jaw relaxed, breathing steady</li>
+              <li>Forward direction targets the most neglected neck muscles</li>
+              <li>Progress to 20-second holds over weeks</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Neck strain / whiplash prevention</span><span class="chip chip-perf">Head stability in sport</span><span class="chip chip-mob">Cervical strength</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🏋️</span>
+        <span class="block-title">Shoulder Health</span>
+        <span class="block-meta">~10 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d0-e4">
+          <div class="exercise-main" onclick="toggleCard('d0-e4')">
+            <div class="exercise-check" onclick="toggleDone(event,'d0-e4',0)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Wall Slides<span class="target">Lower trapezius · Serratus anterior · Scapular control</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 10 reps</div><div class="prescription-note">Arms against wall</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Stand with back, arms, and hands flat against a wall. Slide arms overhead while keeping full contact — back of hands, forearms, elbows. Slide back down.
+            <ul class="cue-list">
+              <li>Ribs down — don't flare as arms rise</li>
+              <li>If contact breaks, only go as high as you can maintain it</li>
+              <li>Squeeze lower traps at the top, not upper traps</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Rotator cuff protection</span><span class="chip chip-perf">Overhead strength</span><span class="chip chip-mob">Thoracic extension</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d0-e5">
+          <div class="exercise-main" onclick="toggleCard('d0-e5')">
+            <div class="exercise-check" onclick="toggleDone(event,'d0-e5',0)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Band Pull-Aparts<span class="target">Posterior deltoid · Rhomboids · External rotators</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 15 reps</div><div class="prescription-note">Light resistance</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Hold a band at shoulder height, arms straight. Pull apart horizontally, squeezing shoulder blades together. Return slowly under tension.
+            <ul class="cue-list">
+              <li>Lead with pinkies, not thumbs</li>
+              <li>Keep elbows soft, not locked</li>
+              <li>Pause 1 second at full spread</li>
+              <li>No band: use a towel with light tension</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Rotator cuff health</span><span class="chip chip-perf">Volleyball arm swing</span><span class="chip chip-mob">Posture correction</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d0-e6">
+          <div class="exercise-main" onclick="toggleCard('d0-e6')">
+            <div class="exercise-check" onclick="toggleDone(event,'d0-e6',0)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Prone Y–T–W<span class="target">Mid / lower trap · Serratus · Rotator cuff</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 8 each shape</div><div class="prescription-note">Bodyweight / light weight</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Lie face-down. Y (arms ~30° overhead), T (arms out to sides), W (elbows bent 90°, pull back). Thumbs up in each position. Lift only as high as feels strong.
+            <ul class="cue-list">
+              <li>Initiate each movement by squeezing between shoulder blades</li>
+              <li>Hold each position for 2 seconds</li>
+              <li>Don't shrug — keep neck long</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Shoulder impingement prevention</span><span class="chip chip-perf">Overhead stability</span><span class="chip chip-mob">Posture / longevity</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🤝</span>
+        <span class="block-title">Wrist Mobility</span>
+        <span class="block-meta">~8 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d0-e7">
+          <div class="exercise-main" onclick="toggleCard('d0-e7')">
+            <div class="exercise-check" onclick="toggleDone(event,'d0-e7',0)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Wrist CARs + Pronation / Supination<span class="target">Radiocarpal joint · Radioulnar joint</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 5 each direction</div><div class="prescription-note">Active end-range tension</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Make a fist and slowly circle the wrist through its entire range. Then, elbow at 90°, rotate palm up and down as far as possible each direction.
+            <ul class="cue-list">
+              <li>Move actively into end-range — don't just swing the hand</li>
+              <li>Elbow stays still during pronation/supination</li>
+              <li>3-second hold at end-range to build mobility</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Wrist sprain prevention</span><span class="chip chip-mob">Wrist joint health</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d0-e8">
+          <div class="exercise-main" onclick="toggleCard('d0-e8')">
+            <div class="exercise-check" onclick="toggleDone(event,'d0-e8',0)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Wrist Extension Loaded Stretch<span class="target">Wrist extensors · Carpal tunnel decompression</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 45 sec / side</div><div class="prescription-note">Fingers pointing back</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Kneel, place hands flat on the floor with fingers pointing back toward your knees. Gently shift weight back over hands to load the wrist extensors.
+            <ul class="cue-list">
+              <li>Start with less weight until you find your tolerance</li>
+              <li>Keep fingers spread — don't let them curl</li>
+              <li>Stretch, never sharp pain</li>
+              <li>Cyclist hands especially benefit from this decompression</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Carpal tunnel prevention</span><span class="chip chip-mob">Wrist extension range</span><span class="chip chip-perf">Front rack / press position</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d0-e9">
+          <div class="exercise-main" onclick="toggleCard('d0-e9')">
+            <div class="exercise-check" onclick="toggleDone(event,'d0-e9',0)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Fingertip Push-Ups<span class="target">Flexor digitorum · Intrinsic hand muscles</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 10 reps</div><div class="prescription-note">On knees if needed</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Push-ups with weight on the pads of your fingers rather than palms. Start on knees to manage load.
+            <ul class="cue-list">
+              <li>Spread all five fingers wide</li>
+              <li>Wrists neutral — don't collapse inward</li>
+              <li>Start with a 10-second hold if movement is too hard</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Finger / wrist resilience</span><span class="chip chip-perf">Volleyball ball control</span><span class="chip chip-perf">Grip strength</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- DAY 1: TUESDAY — LOWER A -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="day-panel" id="day-1">
+    <div class="day-header">
+      <div>
+        <div class="day-title">Tuesday — <em>Lower A</em></div>
+        <div class="day-meta-row">
+          <span class="day-badge badge-lower">Hips · Glutes · Knees</span>
+          <span class="day-time">~30 min</span>
+        </div>
+      </div>
+      <div class="day-progress-wrap">
+        <div class="day-progress-bar"><div class="day-progress-fill" id="dpf-1"></div></div>
+        <span class="day-progress-label" id="dpl-1">0 / 0</span>
+      </div>
+    </div>
+    <div class="day-intent">Hip mobility first, then the glute med work (clamshells + side raises), then knee strengthening. Pairs with a running day or lower-body lift. The clamshell superset is the most important sequence here — do both sides before moving on.</div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🔄</span>
+        <span class="block-title">Hip Mobility</span>
+        <span class="block-meta">~10 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d1-e1">
+          <div class="exercise-main" onclick="toggleCard('d1-e1')">
+            <div class="exercise-check" onclick="toggleDone(event,'d1-e1',1)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">90/90 Hip Switch<span class="target">Hip internal / external rotators · Piriformis</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 5 / side</div><div class="prescription-note">+ 3-sec hold each side</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Sit with both legs at 90° angles. Rotate hips to switch sides, sweeping both legs through. Torso upright throughout.
+            <ul class="cue-list">
+              <li>Both shins at 90° in each position</li>
+              <li>Hands lightly on floor for balance only</li>
+              <li>The weak direction reveals your actual restriction</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-mob">Hip rotational mobility</span><span class="chip chip-inj">Groin / hip flexor protection</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d1-e2">
+          <div class="exercise-main" onclick="toggleCard('d1-e2')">
+            <div class="exercise-check" onclick="toggleDone(event,'d1-e2',1)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Deep Squat Hold<span class="target">Hip flexors · Adductors · Thoracic spine · Ankles</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 60 sec</div><div class="prescription-note">Feet flat if possible</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Drop into a deep squat and hold. Use a doorframe for support if needed. While in the squat, rotate your torso, press knees out with elbows, explore positions.
+            <ul class="cue-list">
+              <li>Heels flat — use a small plate under heels while building ankle mobility</li>
+              <li>Chest up, spine long</li>
+              <li>Use the hold time actively — shift weight side to side</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-mob">Full hip range</span><span class="chip chip-perf">Squat depth</span><span class="chip chip-inj">Lower back / knee health</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d1-e3">
+          <div class="exercise-main" onclick="toggleCard('d1-e3')">
+            <div class="exercise-check" onclick="toggleDone(event,'d1-e3',1)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Standing Hip CARs<span class="target">Hip capsule · Full circumduction pattern</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 reps / side</div><div class="prescription-note">One hand on wall</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Stand on one leg. Lift the other and trace the largest possible circle with the knee — forward, out, behind, back. Keep the standing hip from shifting.
+            <ul class="cue-list">
+              <li>Maximum range, not speed</li>
+              <li>Pelvis level — don't let it hike or drop</li>
+              <li>Reverse direction for equal reps</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-mob">Hip joint health / longevity</span><span class="chip chip-bal">Single-leg stability</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">💪</span>
+        <span class="block-title">Glute Med Superset — Clamshells + Side Raises</span>
+        <span class="block-meta">~10 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d1-e4">
+          <div class="exercise-main" onclick="toggleCard('d1-e4')">
+            <div class="exercise-check" onclick="toggleDone(event,'d1-e4',1)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Clamshells<span class="target">Gluteus medius · Gluteus minimus · External hip rotators</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 20 / side</div><div class="prescription-note">Band above knees (optional)</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Lie on your side, hips stacked, knees bent ~45°. Keeping feet together, rotate top knee upward like a clamshell opening. 1–2 second hold at top, lower slowly. Do all reps on one side, immediately follow with side raises, then flip.
+            <ul class="cue-list">
+              <li>Pelvis completely still — if your hips roll back, you've gone too far</li>
+              <li>Movement from the hip, not from arching your back</li>
+              <li>Band above knees adds intensity significantly</li>
+              <li>Weak glute med is a primary cause of IT band syndrome and runner's knee</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">IT band / runner's knee prevention</span><span class="chip chip-perf">Running lateral stability</span><span class="chip chip-inj">Hip drop prevention</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d1-e5">
+          <div class="exercise-main" onclick="toggleCard('d1-e5')">
+            <div class="exercise-check" onclick="toggleDone(event,'d1-e5',1)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Side-Lying Leg Raises<span class="target">Gluteus medius · TFL · Hip abductors (full range)</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 15 / side</div><div class="prescription-note">Slow controlled lower</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Lie on your side, body in a straight line (hips stacked, not bent). Top leg straight, raise it ~45° then lower slowly. Do these immediately after clamshells on the same side before flipping.
+            <ul class="cue-list">
+              <li>Toes slightly toward the floor (internal rotation) isolates glute med over TFL</li>
+              <li>Don't let the top hip hike upward as leg rises</li>
+              <li>1-second pause at the top</li>
+              <li>Progress: ankle weight or band above ankles</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Lateral knee / hip stability</span><span class="chip chip-perf">Volleyball lateral shuffle power</span><span class="chip chip-perf">Running pelvic control</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🦵</span>
+        <span class="block-title">Knee Strength</span>
+        <span class="block-meta">~10 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d1-e6">
+          <div class="exercise-main" onclick="toggleCard('d1-e6')">
+            <div class="exercise-check" onclick="toggleDone(event,'d1-e6',1)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Terminal Knee Extensions (TKE)<span class="target">VMO (inner quad) · Patellar tendon · Knee mechanics</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 15 / side</div><div class="prescription-note">Band behind knee</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Band around a fixed point, step into it behind the knee. From slight bend, fully straighten the knee against the band resistance, squeezing the quad at lockout.
+            <ul class="cue-list">
+              <li>Focus squeeze on inner (medial) quad — the teardrop above the knee</li>
+              <li>Don't hyperextend at lockout</li>
+              <li>No band: slow terminal extensions seated</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Patellar tendinopathy prevention</span><span class="chip chip-perf">Landing mechanics</span><span class="chip chip-inj">Knee stability</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d1-e7">
+          <div class="exercise-main" onclick="toggleCard('d1-e7')">
+            <div class="exercise-check" onclick="toggleDone(event,'d1-e7',1)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Step-Down (Eccentric Decline)<span class="target">Quad eccentric strength · Patellar tendon load tolerance</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 10 / side</div><div class="prescription-note">3-second lower</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Stand on a step. Slowly lower the opposite foot toward the ground by bending the standing knee — 3 seconds down. Return.
+            <ul class="cue-list">
+              <li>Knee tracks in line with your 2nd toe</li>
+              <li>Don't let the hip drop on the lowering side</li>
+              <li>Progress: increase step height or add light weight</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Tendon resilience</span><span class="chip chip-perf">Volleyball landing absorption</span><span class="chip chip-bal">Single-leg control</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d1-e8">
+          <div class="exercise-main" onclick="toggleCard('d1-e8')">
+            <div class="exercise-check" onclick="toggleDone(event,'d1-e8',1)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Couch Stretch<span class="target">Hip flexors · Rectus femoris · Anterior knee</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 min / side</div><div class="prescription-note">Against wall or couch</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Kneel with one shin up a wall, other foot forward in a lunge. Squeeze the glute on the back leg and gently push your hips forward.
+            <ul class="cue-list">
+              <li>Actively squeeze the glute — this is what makes it therapeutic</li>
+              <li>Torso upright, don't lean forward</li>
+              <li>One of the most important stretches for cyclists and runners</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-mob">Quad / hip flexor length</span><span class="chip chip-inj">Anterior knee pain prevention</span><span class="chip chip-perf">Running stride length</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- DAY 2: WEDNESDAY — RECOVERY -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="day-panel" id="day-2">
+    <div class="day-header">
+      <div>
+        <div class="day-title">Wednesday — <em>Recovery &amp; Integration</em></div>
+        <div class="day-meta-row">
+          <span class="day-badge badge-recovery">Balance · Core · Thoracic</span>
+          <span class="day-time">~25 min</span>
+        </div>
+      </div>
+      <div class="day-progress-wrap">
+        <div class="day-progress-bar"><div class="day-progress-fill" id="dpf-2"></div></div>
+        <span class="day-progress-label" id="dpl-2">0 / 0</span>
+      </div>
+    </div>
+    <div class="day-intent">Active recovery day — slower pace, longer holds. No heavy resistance. The goal is nervous system work: proprioception, thoracic mobility, and core stability. Hold each position slightly longer than feels comfortable.</div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">⚖️</span>
+        <span class="block-title">Balance &amp; Proprioception</span>
+        <span class="block-meta">~12 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d2-e1">
+          <div class="exercise-main" onclick="toggleCard('d2-e1')">
+            <div class="exercise-check" onclick="toggleDone(event,'d2-e1',2)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Single-Leg RDL Balance Hold<span class="target">Posterior chain · Proprioception · Hip hinge</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 25 sec / side</div><div class="prescription-note">Eyes open → eyes closed</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Stand on one leg, hinge forward at the hip (RDL position), back leg floats up. Hold still. Progress: close your eyes.
+            <ul class="cue-list">
+              <li>Spine neutral, not rounded</li>
+              <li>Standing foot grips floor like a tripod</li>
+              <li>Eyes closed version is 3× harder — that's normal</li>
+              <li>Most important balance exercise for injury prevention across all your sports</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-bal">Proprioception</span><span class="chip chip-inj">Ankle / knee stability</span><span class="chip chip-perf">Running efficiency</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d2-e2">
+          <div class="exercise-main" onclick="toggleCard('d2-e2')">
+            <div class="exercise-check" onclick="toggleDone(event,'d2-e2',2)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Hip Flexor Lift-Off (Active Psoas)<span class="target">Psoas · Iliacus · Hip flexion strength</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 10 / side</div><div class="prescription-note">Seated at bench edge</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Sit at the edge of a bench. Actively lift one knee toward your chest as high as possible while keeping torso upright. Hold 2 seconds at the top.
+            <ul class="cue-list">
+              <li>Don't lean back as the knee rises — stay tall</li>
+              <li>Pull from the hip crease, not the knee</li>
+              <li>Progress: small weight on the thigh</li>
+              <li>Direct antidote to hip flexor inhibition from prolonged cycling</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-perf">Running knee drive</span><span class="chip chip-perf">Cycling power</span><span class="chip chip-inj">Hip flexor strain prevention</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d2-e3">
+          <div class="exercise-main" onclick="toggleCard('d2-e3')">
+            <div class="exercise-check" onclick="toggleDone(event,'d2-e3',2)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Ankle CARs + Alphabet<span class="target">Talocrural joint · Peroneal tendons · Proprioception</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 min / side</div><div class="prescription-note">Seated, foot elevated</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Seated, leg extended. Slowly trace circles (5 each direction), then spell the alphabet with your big toe as the pen.
+            <ul class="cue-list">
+              <li>Move from the ankle, not the whole leg</li>
+              <li>Make letters deliberately large</li>
+              <li>Great to do first thing in the morning, even still in bed</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Ankle sprain prevention</span><span class="chip chip-bal">Proprioceptive acuity</span><span class="chip chip-mob">Joint health</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🌀</span>
+        <span class="block-title">Core &amp; Thoracic</span>
+        <span class="block-meta">~13 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d2-e4">
+          <div class="exercise-main" onclick="toggleCard('d2-e4')">
+            <div class="exercise-check" onclick="toggleDone(event,'d2-e4',2)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Dead Bug (Contralateral)<span class="target">Transverse abdominis · Multifidus · Lumbar stability</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 8 / side</div><div class="prescription-note">Low back pressed flat</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Lie on back, arms to ceiling, knees at 90° over hips. Simultaneously lower opposite arm and leg toward floor, keeping lower back flat. Return. Alternate.
+            <ul class="cue-list">
+              <li>Press lower back into floor the entire time — no gap</li>
+              <li>Move slowly enough that the back stays engaged</li>
+              <li>Exhale as limbs lower; inhale as they return</li>
+              <li>If lower back lifts, reduce the range — don't push through</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Spinal stability</span><span class="chip chip-perf">Force transfer in all lifts</span><span class="chip chip-mob">Longevity foundation</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d2-e5">
+          <div class="exercise-main" onclick="toggleCard('d2-e5')">
+            <div class="exercise-check" onclick="toggleDone(event,'d2-e5',2)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Bear Plank Hold + Shoulder Tap<span class="target">Core anti-rotation · Shoulder stability · Wrist loading</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 10 taps / side</div><div class="prescription-note">Hips level and still</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Bear plank (knees 2 inches off floor, back flat). Lift one hand, tap opposite shoulder, hips perfectly still. Return. Alternate.
+            <ul class="cue-list">
+              <li>Widen feet to reduce hip rotation, then narrow as you improve</li>
+              <li>Zero hip wobble — slow down to achieve it</li>
+              <li>Also loads wrists progressively</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-perf">Core stability</span><span class="chip chip-inj">Low back protection</span><span class="chip chip-inj">Shoulder stability</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d2-e6">
+          <div class="exercise-main" onclick="toggleCard('d2-e6')">
+            <div class="exercise-check" onclick="toggleDone(event,'d2-e6',2)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Standing Thoracic Rotation<span class="target">Thoracic spine · Rib cage mobility · Rotational range</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 10 / side</div><div class="prescription-note">Arms crossed at chest</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Stand, feet hip-width, slight knee bend, arms crossed at chest. Rotate upper body as far as possible to one side while keeping hips forward. Pause at end range.
+            <ul class="cue-list">
+              <li>Hips stay square — rotation is purely thoracic</li>
+              <li>Look over your shoulder to maximize the rotation</li>
+              <li>Exhale at end range to gain a few more degrees</li>
+              <li>Counter-clockwise is often tighter in right-handed athletes</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-mob">Thoracic mobility</span><span class="chip chip-perf">Volleyball swinging / reaching</span><span class="chip chip-inj">Low back decompression</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d2-e7">
+          <div class="exercise-main" onclick="toggleCard('d2-e7')">
+            <div class="exercise-check" onclick="toggleDone(event,'d2-e7',2)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Toe Yoga + Short Foot<span class="target">Intrinsic foot muscles · Arch support · Proprioception</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 60 sec / side</div><div class="prescription-note">Seated or standing</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Toe yoga: lift only big toe keeping others down, then reverse. Short foot: without curling toes, dome your arch by pulling the ball of your foot toward your heel.
+            <ul class="cue-list">
+              <li>Toe yoga feels impossible at first — that's the point</li>
+              <li>Short foot: imagine a string pulling the ball of your foot toward your heel</li>
+              <li>Progress: hold short foot while performing calf raises</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Plantar fasciitis prevention</span><span class="chip chip-bal">Foot proprioception</span><span class="chip chip-perf">Running economy</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- DAY 3: THURSDAY — LOWER B -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="day-panel" id="day-3">
+    <div class="day-header">
+      <div>
+        <div class="day-title">Thursday — <em>Lower B</em></div>
+        <div class="day-meta-row">
+          <span class="day-badge badge-lower">Ankles · Feet · Calves · Knee</span>
+          <span class="day-time">~30 min</span>
+        </div>
+      </div>
+      <div class="day-progress-wrap">
+        <div class="day-progress-bar"><div class="day-progress-fill" id="dpf-3"></div></div>
+        <span class="day-progress-label" id="dpl-3">0 / 0</span>
+      </div>
+    </div>
+    <div class="day-intent">The lower leg and foot complex — the parts that absorb every step, push-off, and landing. Pairs with a running or cycling day. The calf raises are the longest-time exercise here; use a step edge and go very slow.</div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🦶</span>
+        <span class="block-title">Ankle &amp; Foot</span>
+        <span class="block-meta">~14 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d3-e1">
+          <div class="exercise-main" onclick="toggleCard('d3-e1')">
+            <div class="exercise-check" onclick="toggleDone(event,'d3-e1',3)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Ankle CARs + Alphabet<span class="target">Talocrural joint · Peroneal tendons · Ankle proprioception</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 min / side</div><div class="prescription-note">Seated, foot elevated</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Circles (5 each direction) then spell the alphabet with your big toe. Move from the ankle, not the whole leg.
+            <ul class="cue-list">
+              <li>Make letters deliberately large to access full range</li>
+              <li>The letters you struggle with reveal your restrictions</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Ankle sprain prevention</span><span class="chip chip-bal">Proprioceptive acuity</span><span class="chip chip-mob">Joint health</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d3-e2">
+          <div class="exercise-main" onclick="toggleCard('d3-e2')">
+            <div class="exercise-check" onclick="toggleDone(event,'d3-e2',3)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Knee-to-Wall Dorsiflexion Drill<span class="target">Soleus · Achilles · Ankle dorsiflexion ROM</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 10 / side</div><div class="prescription-note">Track toe distance weekly</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Facing a wall, toes ~4–5 cm away. Drive your knee forward to touch the wall, heel completely flat. Gradually increase distance as mobility improves.
+            <ul class="cue-list">
+              <li>Knee tracks over your little toe — don't let it cave inward</li>
+              <li>Heel must stay completely flat — that's the whole point</li>
+              <li>Record your starting distance and track weekly improvements</li>
+              <li>Limited dorsiflexion is linked to patellofemoral pain and squat depth</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-mob">Dorsiflexion range</span><span class="chip chip-perf">Squat mechanics</span><span class="chip chip-inj">Achilles / plantar fascia health</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d3-e3">
+          <div class="exercise-main" onclick="toggleCard('d3-e3')">
+            <div class="exercise-check" onclick="toggleDone(event,'d3-e3',3)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Single-Leg Calf Raise (Slow Eccentric)<span class="target">Gastrocnemius · Soleus · Achilles tendon</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 12 / side</div><div class="prescription-note">3-sec down, 2-sec hold top</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Stand on one foot on a step edge. Rise onto toes (can use two feet to rise), hold, then lower very slowly on one foot.
+            <ul class="cue-list">
+              <li>Full range — full drop at bottom, full rise at top</li>
+              <li>Straight leg = gastrocnemius; bent knee = soleus — do both over time</li>
+              <li>The slow eccentric is the therapeutic component for Achilles health</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Achilles tendinopathy prevention</span><span class="chip chip-perf">Running push-off power</span><span class="chip chip-perf">Volleyball vertical</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d3-e4">
+          <div class="exercise-main" onclick="toggleCard('d3-e4')">
+            <div class="exercise-check" onclick="toggleDone(event,'d3-e4',3)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Toe Yoga + Short Foot<span class="target">Intrinsic foot muscles · Arch support · Proprioception</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 60 sec / side</div><div class="prescription-note">Seated or standing</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Lift only big toe keeping others down, then reverse. Short foot: dome your arch by pulling ball of foot toward heel without curling toes.
+            <ul class="cue-list">
+              <li>Toe yoga feels impossible at first — that's the point</li>
+              <li>Progress: hold short foot while performing calf raises</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Plantar fasciitis prevention</span><span class="chip chip-bal">Foot proprioception</span><span class="chip chip-perf">Running economy</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🦵</span>
+        <span class="block-title">Knee &amp; Hip</span>
+        <span class="block-meta">~16 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d3-e5">
+          <div class="exercise-main" onclick="toggleCard('d3-e5')">
+            <div class="exercise-check" onclick="toggleDone(event,'d3-e5',3)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Couch Stretch<span class="target">Hip flexors · Rectus femoris · Anterior knee</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 min / side</div><div class="prescription-note">Squeeze glute actively</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Shin up a wall, other foot forward in a lunge. Squeeze glute on back leg, push hips gently forward.
+            <ul class="cue-list">
+              <li>The glute squeeze is what makes it therapeutic — not optional</li>
+              <li>Torso upright</li>
+              <li>Non-negotiable for cyclists and runners</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-mob">Quad / hip flexor length</span><span class="chip chip-inj">Anterior knee pain prevention</span><span class="chip chip-perf">Running stride</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d3-e6">
+          <div class="exercise-main" onclick="toggleCard('d3-e6')">
+            <div class="exercise-check" onclick="toggleDone(event,'d3-e6',3)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Nordic Hamstring Curl Negatives<span class="target">Biceps femoris · Semimembranosus · Hamstring tendon</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 6 reps</div><div class="prescription-note">5-sec controlled lower</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Kneel with feet anchored (under a couch or with a partner). Keeping your body rigid like a plank, slowly lower your torso toward the floor using only your hamstrings. Catch yourself with hands, push back up.
+            <ul class="cue-list">
+              <li>The lowering (eccentric) phase is everything — go as slow as you can</li>
+              <li>Keep your hips extended — don't break at the hips to make it easier</li>
+              <li>6 reps sounds easy; 5-second eccentrics will humble you</li>
+              <li>One of the most evidence-backed exercises for hamstring injury prevention in running</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Hamstring strain prevention</span><span class="chip chip-perf">Sprint / running power</span><span class="chip chip-mob">Posterior chain resilience</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d3-e7">
+          <div class="exercise-main" onclick="toggleCard('d3-e7')">
+            <div class="exercise-check" onclick="toggleDone(event,'d3-e7',3)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Single-Leg RDL Balance Hold<span class="target">Posterior chain · Proprioception</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 20 sec / side</div><div class="prescription-note">Progress to eyes closed</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Stand on one leg, hinge forward at the hip, back leg floats up. Hold still.
+            <ul class="cue-list">
+              <li>Spine neutral, not rounded</li>
+              <li>Standing foot grips the floor like a tripod</li>
+              <li>Eyes closed version is 3× harder — work up to it</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-bal">Proprioception</span><span class="chip chip-inj">Ankle / knee stability</span><span class="chip chip-perf">Running efficiency</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- DAY 4: FRIDAY — UPPER B -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="day-panel" id="day-4">
+    <div class="day-header">
+      <div>
+        <div class="day-title">Friday — <em>Upper B</em></div>
+        <div class="day-meta-row">
+          <span class="day-badge badge-upper">Wrist Strength · Neck · Shoulder</span>
+          <span class="day-time">~30 min</span>
+        </div>
+      </div>
+      <div class="day-progress-wrap">
+        <div class="day-progress-bar"><div class="day-progress-fill" id="dpf-4"></div></div>
+        <span class="day-progress-label" id="dpl-4">0 / 0</span>
+      </div>
+    </div>
+    <div class="day-intent">The strength-focused upper day. Where Monday was mobility-first, today leads with wrist and forearm loading. Pairs well before a lift or volleyball session. The wrist roller goes last — it's a finisher.</div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🤝</span>
+        <span class="block-title">Wrist &amp; Forearm Strength</span>
+        <span class="block-meta">~14 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d4-e1">
+          <div class="exercise-main" onclick="toggleCard('d4-e1')">
+            <div class="exercise-check" onclick="toggleDone(event,'d4-e1',4)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Wrist Curls + Reverse Curls<span class="target">Flexor carpi · Wrist extensors · Forearm strength</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 15 each</div><div class="prescription-note">Light DB or water bottle</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Forearm resting on thigh, hand hanging off edge. <strong>Wrist curl:</strong> palm up, curl weight upward. <strong>Reverse curl:</strong> flip to palm down, curl upward by extending the wrist.
+            <ul class="cue-list">
+              <li>Use very light weight — 1–3 kg is plenty</li>
+              <li>Full range — let wrist drop all the way before curling</li>
+              <li>Slow and deliberate — precision work, not a race</li>
+              <li>Reverse curls target the extensors — key for tennis elbow prevention</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Tennis elbow prevention</span><span class="chip chip-perf">Grip endurance</span><span class="chip chip-perf">Volleyball setting / blocking</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d4-e2">
+          <div class="exercise-main" onclick="toggleCard('d4-e2')">
+            <div class="exercise-check" onclick="toggleDone(event,'d4-e2',4)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Forearm Rotation with Offset Load<span class="target">Pronator teres · Supinator · Radioulnar strength</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 15 each direction</div><div class="prescription-note">DB held at one end</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Hold a dumbbell at one end (or a hammer). Elbow bent at 90°. Slowly rotate palm up (supination), then palm down (pronation). The offset load creates torque that directly loads the rotators.
+            <ul class="cue-list">
+              <li>Elbow pinned to your side — movement is purely in the forearm</li>
+              <li>A longer, lighter object creates more leverage — a hammer is ideal</li>
+              <li>Control through the entire arc — don't let gravity do the work</li>
+              <li>Protects against cycling handlebar grip stress</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Wrist / elbow rotational resilience</span><span class="chip chip-perf">Forearm strength</span><span class="chip chip-mob">Radioulnar joint health</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d4-e3">
+          <div class="exercise-main" onclick="toggleCard('d4-e3')">
+            <div class="exercise-check" onclick="toggleDone(event,'d4-e3',4)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Fingertip Push-Ups<span class="target">Flexor digitorum · Intrinsic hand muscles</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 10 reps</div><div class="prescription-note">On knees if needed</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Push-ups with weight on the pads of your fingers rather than palms.
+            <ul class="cue-list">
+              <li>Spread all five fingers wide</li>
+              <li>Wrists neutral — don't collapse inward</li>
+              <li>Start with just a 10-second hold if needed</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Finger / wrist resilience</span><span class="chip chip-perf">Ball control</span><span class="chip chip-perf">Grip strength</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d4-e4">
+          <div class="exercise-main" onclick="toggleCard('d4-e4')">
+            <div class="exercise-check" onclick="toggleDone(event,'d4-e4',4)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Wrist Roller — Roll-Up / Roll-Down<span class="target">Full forearm complex · Grip endurance · Wrist stability under load</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × full roll each way</div><div class="prescription-note">Arms at sides or extended</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Use a wrist roller or DIY (short stick, rope, light weight). Wind the rope up by alternating wrist curls, then slowly reverse to unwind.
+            <ul class="cue-list">
+              <li>Arms extended is harder — start with arms at sides if needed</li>
+              <li>Go slow on the unwind — eccentric phase is where adaptation happens</li>
+              <li>Start very light (0.5–1 kg) — it feels easy until suddenly it doesn't</li>
+              <li>DIY: tie a 500g weight to a thick marker with a shoelace</li>
+              <li>One of the most complete forearm exercises available</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-perf">Grip / forearm endurance</span><span class="chip chip-inj">Elbow tendon resilience</span><span class="chip chip-perf">Deadlift / pull-up grip</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🔄</span>
+        <span class="block-title">Neck &amp; Shoulder Repeat</span>
+        <span class="block-meta">~16 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d4-e5">
+          <div class="exercise-main" onclick="toggleCard('d4-e5')">
+            <div class="exercise-check" onclick="toggleDone(event,'d4-e5',4)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Neck CARs<span class="target">Cervical spine · All planes</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 reps / side</div><div class="prescription-note">Slow &amp; deliberate</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Slowly rotate head through full range, making the largest possible circle.
+            <ul class="cue-list"><li>Shoulders still and relaxed</li><li>8–10 seconds per full circle</li><li>Reverse on second rep</li></ul>
+            <div class="benefit-chips"><span class="chip chip-mob">Cervical mobility</span><span class="chip chip-inj">Neck strain prevention</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d4-e6">
+          <div class="exercise-main" onclick="toggleCard('d4-e6')">
+            <div class="exercise-check" onclick="toggleDone(event,'d4-e6',4)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Isometric Neck Holds (4 Directions)<span class="target">Deep cervical flexors · SCM · Extensors · Lateral flexors</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 15 sec each</div><div class="prescription-note">Progressive from Monday</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Palm against head, resist with neck in all four directions. No movement.
+            <ul class="cue-list"><li>Slightly longer holds than Monday (15 vs 10 sec)</li><li>70% effort — jaw relaxed, breathing steady</li></ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Neck strain prevention</span><span class="chip chip-perf">Head stability in sport</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d4-e7">
+          <div class="exercise-main" onclick="toggleCard('d4-e7')">
+            <div class="exercise-check" onclick="toggleDone(event,'d4-e7',4)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Band Pull-Aparts<span class="target">Posterior deltoid · Rhomboids · External rotators</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 20 reps</div><div class="prescription-note">Slightly heavier than Monday</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Band at shoulder height, arms straight. Pull apart horizontally, squeezing shoulder blades.
+            <ul class="cue-list"><li>Lead with pinkies</li><li>1-second pause at full spread</li><li>Progress: step further from anchor or use heavier band</li></ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Rotator cuff health</span><span class="chip chip-perf">Volleyball arm swing</span></div>
+          </div>
+        </div>
+
+        <div class="exercise-card" id="d4-e8">
+          <div class="exercise-main" onclick="toggleCard('d4-e8')">
+            <div class="exercise-check" onclick="toggleDone(event,'d4-e8',4)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Chin Tuck + Neck Nod<span class="target">Deep cervical flexors · Alignment</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 15 reps</div><div class="prescription-note">Supine</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">
+            Chin back, nod yes. Tiny range, high control.
+            <ul class="cue-list"><li>Chin tuck = glide backward, not crunch down</li><li>Lengthen the back of your neck</li></ul>
+            <div class="benefit-chips"><span class="chip chip-inj">Forward head posture</span><span class="chip chip-mob">Cervical stability</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- DAY 5: SATURDAY — FULL BODY -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="day-panel" id="day-5">
+    <div class="day-header">
+      <div>
+        <div class="day-title">Saturday — <em>Full Body</em></div>
+        <div class="day-meta-row">
+          <span class="day-badge badge-full">Hips · Glutes · Shoulders · Balance</span>
+          <span class="day-time">~30 min</span>
+        </div>
+      </div>
+      <div class="day-progress-wrap">
+        <div class="day-progress-bar"><div class="day-progress-fill" id="dpf-5"></div></div>
+        <span class="day-progress-label" id="dpl-5">0 / 0</span>
+      </div>
+    </div>
+    <div class="day-intent">A complete sampler hitting every system. One exercise per region — enough to maintain everything trained earlier in the week. Good pre-game warmup for volleyball, or a standalone on an active rest day.</div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🌐</span>
+        <span class="block-title">Full Body Circuit — One Round Per Region</span>
+        <span class="block-meta">~30 min</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d5-e1">
+          <div class="exercise-main" onclick="toggleCard('d5-e1')">
+            <div class="exercise-check" onclick="toggleDone(event,'d5-e1',5)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Neck CARs<span class="target">Cervical spine · All planes</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 reps / side</div><div class="prescription-note">Warm-up</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">Full range head circles, large and slow. Shoulders still.<div class="benefit-chips"><span class="chip chip-mob">Cervical mobility</span></div></div>
+        </div>
+
+        <div class="exercise-card" id="d5-e2">
+          <div class="exercise-main" onclick="toggleCard('d5-e2')">
+            <div class="exercise-check" onclick="toggleDone(event,'d5-e2',5)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Wall Slides<span class="target">Lower trapezius · Serratus · Scapular control</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 12 reps</div><div class="prescription-note"></div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">Arms, forearms, and back of hands against wall. Slide overhead keeping contact throughout.<div class="benefit-chips"><span class="chip chip-inj">Rotator cuff</span><span class="chip chip-mob">Thoracic extension</span></div></div>
+        </div>
+
+        <div class="exercise-card" id="d5-e3">
+          <div class="exercise-main" onclick="toggleCard('d5-e3')">
+            <div class="exercise-check" onclick="toggleDone(event,'d5-e3',5)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Wrist CARs + Extension Stretch<span class="target">Radiocarpal joint · Wrist extensors</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">5 circles + 45 sec stretch</div><div class="prescription-note">Each side</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">Circles each direction, then fingers-pointing-back floor stretch.<div class="benefit-chips"><span class="chip chip-inj">Carpal tunnel prevention</span><span class="chip chip-mob">Wrist range</span></div></div>
+        </div>
+
+        <div class="exercise-card" id="d5-e4">
+          <div class="exercise-main" onclick="toggleCard('d5-e4')">
+            <div class="exercise-check" onclick="toggleDone(event,'d5-e4',5)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Deep Squat Hold<span class="target">Hips · Ankles · Thoracic</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 60 sec</div><div class="prescription-note">Move around inside it</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">Drop into a deep squat, use a doorframe if needed. Rotate thoracic spine, press knees out, shift weight side to side.<div class="benefit-chips"><span class="chip chip-mob">Full hip range</span><span class="chip chip-perf">Squat depth</span></div></div>
+        </div>
+
+        <div class="exercise-card" id="d5-e5">
+          <div class="exercise-main" onclick="toggleCard('d5-e5')">
+            <div class="exercise-check" onclick="toggleDone(event,'d5-e5',5)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Clamshells + Side Raises Superset<span class="target">Gluteus medius · Hip abductors</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 15 each / side</div><div class="prescription-note">One side, then flip</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">Do all clamshells on one side, immediately follow with leg raises, then flip. Keep pelvis still throughout both exercises.<div class="benefit-chips"><span class="chip chip-inj">IT band / knee stability</span><span class="chip chip-perf">Running pelvic control</span></div></div>
+        </div>
+
+        <div class="exercise-card" id="d5-e6">
+          <div class="exercise-main" onclick="toggleCard('d5-e6')">
+            <div class="exercise-check" onclick="toggleDone(event,'d5-e6',5)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Single-Leg Calf Raise (Slow Eccentric)<span class="target">Gastrocnemius · Soleus · Achilles</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 10 / side</div><div class="prescription-note">Step edge</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">Rise on two, lower slowly on one. 3-second descent.<div class="benefit-chips"><span class="chip chip-inj">Achilles health</span><span class="chip chip-perf">Push-off power</span></div></div>
+        </div>
+
+        <div class="exercise-card" id="d5-e7">
+          <div class="exercise-main" onclick="toggleCard('d5-e7')">
+            <div class="exercise-check" onclick="toggleDone(event,'d5-e7',5)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Single-Leg RDL Balance Hold<span class="target">Posterior chain · Proprioception</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 × 25 sec / side</div><div class="prescription-note">Eyes closed when ready</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">Hinge on one leg, back leg floats, hold still.<div class="benefit-chips"><span class="chip chip-bal">Proprioception</span><span class="chip chip-inj">Ankle / knee stability</span></div></div>
+        </div>
+
+        <div class="exercise-card" id="d5-e8">
+          <div class="exercise-main" onclick="toggleCard('d5-e8')">
+            <div class="exercise-check" onclick="toggleDone(event,'d5-e8',5)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Standing Thoracic Rotation<span class="target">Thoracic spine · Rib cage mobility</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2 × 10 / side</div><div class="prescription-note">Arms crossed</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">Rotate upper body as far as possible, hips square. Exhale at end range.<div class="benefit-chips"><span class="chip chip-mob">Thoracic mobility</span><span class="chip chip-inj">Low back decompression</span></div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- DAY 6: SUNDAY — REST / FLEX -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="day-panel" id="day-6">
+    <div class="day-header">
+      <div>
+        <div class="day-title">Sunday — <em>Rest or Flex Day</em></div>
+        <div class="day-meta-row">
+          <span class="day-badge badge-recovery">Optional · Low intensity · Catch-up</span>
+          <span class="day-time">0–20 min</span>
+        </div>
+      </div>
+      <div class="day-progress-wrap">
+        <div class="day-progress-bar"><div class="day-progress-fill" id="dpf-6"></div></div>
+        <span class="day-progress-label" id="dpl-6">0 / 0</span>
+      </div>
+    </div>
+    <div class="day-intent">True rest — or use this as a flex day to repeat whatever felt weakest this week, or catch a day you missed. The three options below are pure recovery; pick one, or do nothing. Both are valid.</div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">😮‍💨</span>
+        <span class="block-title">Optional Recovery — Pick One or Combine</span>
+        <span class="block-meta">Choose your own adventure</span>
+      </div>
+      <div class="exercises">
+
+        <div class="exercise-card" id="d6-e1">
+          <div class="exercise-main" onclick="toggleCard('d6-e1')">
+            <div class="exercise-check" onclick="toggleDone(event,'d6-e1',6)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Couch Stretch (both sides, extended hold)<span class="target">Hip flexors · Quads · Anterior knee</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 min / side</div><div class="prescription-note">Longer than usual</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">Shin up the wall, lunge position. Squeeze glute, push hips forward. Breathe slowly. Extra time in this position pays forward dividends for the whole week.<div class="benefit-chips"><span class="chip chip-mob">Hip flexor recovery</span><span class="chip chip-inj">Knee / hip maintenance</span></div></div>
+        </div>
+
+        <div class="exercise-card" id="d6-e2">
+          <div class="exercise-main" onclick="toggleCard('d6-e2')">
+            <div class="exercise-check" onclick="toggleDone(event,'d6-e2',6)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">90/90 Hip Holds (passive)<span class="target">Hip rotators · Piriformis · Adductors</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">2–3 min / side</div><div class="prescription-note">No switching — just hold</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">Sit in 90/90 position. Instead of switching, just hold one side and breathe into the restriction. Use hands for minimal support. Let gravity do the work over time.<div class="benefit-chips"><span class="chip chip-mob">Hip rotational range</span><span class="chip chip-mob">Passive flexibility</span></div></div>
+        </div>
+
+        <div class="exercise-card" id="d6-e3">
+          <div class="exercise-main" onclick="toggleCard('d6-e3')">
+            <div class="exercise-check" onclick="toggleDone(event,'d6-e3',6)"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="exercise-name">Full Body CARs Sequence<span class="target">Neck → shoulders → wrists → hips → ankles</span></div>
+            <div class="exercise-prescription"><div class="prescription-main">3 reps / joint / side</div><div class="prescription-note">Head to toe</div></div>
+            <div class="expand-caret">▶</div>
+          </div>
+          <div class="exercise-expand">One slow, deliberate round of controlled articular rotations from neck down to ankles. Takes 10–12 minutes at a slow pace. Pure joint maintenance — ideal Sunday morning ritual, coffee in hand afterward.
+            <ul class="cue-list">
+              <li>Neck CARs → shoulder CARs → wrist CARs → hip CARs → ankle CARs</li>
+              <li>3 reps each direction, each joint, each side</li>
+              <li>Move with intention — feel every degree of the range</li>
+              <li>This is probably the single best longevity investment in the whole program</li>
+            </ul>
+            <div class="benefit-chips"><span class="chip chip-mob">Full body joint health</span><span class="chip chip-mob">Longevity</span><span class="chip chip-bal">Body awareness</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    This split is a template, not a rigid prescription — shift days to match your training schedule. Upper A (Mon) and Upper B (Fri) run twice per week so the neck, shoulder, and wrist work gets two doses. Lower A hits the glutes and knees hard; Lower B targets the ankle-foot complex and hamstrings. Wednesday's recovery day is intentionally low-load — resist the urge to push harder on it. If you miss a day, don't double up; just continue from where you are.
+  </div>
+
+</div>
+
+<script>
+  const NUM_DAYS = 7;
+  const DAY_NAMES = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const STORAGE_KEY = 'accessory_program_v1';
+  const WEEK_KEY = 'accessory_week_start_v1';
+
+  let currentDay = 0;
+
+  // ── Week management ──────────────────────────────────────────
+  // Returns the ISO date string (YYYY-MM-DD) of the most recent Monday
+  function getMondayOfCurrentWeek() {
+    const now = new Date();
+    const day = now.getDay(); // 0=Sun, 1=Mon...
+    const diff = (day === 0) ? -6 : 1 - day; // roll back to Monday
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diff);
+    return monday.toISOString().slice(0, 10);
+  }
+
+  // Load state from localStorage, auto-resetting if it's a new week
+  function loadState() {
+    const currentWeekStart = getMondayOfCurrentWeek();
+    const savedWeekStart = localStorage.getItem(WEEK_KEY);
+
+    if (savedWeekStart !== currentWeekStart) {
+      // New week — wipe all checkbox state, record new week start
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(WEEK_KEY, currentWeekStart);
+      return {};
+    }
+
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    } catch (e) {
+      return {};
+    }
+  }
+
+  // Save state to localStorage: { 'day-0': ['d0-e1', 'd0-e3', ...], ... }
+  function saveState() {
+    const state = {};
+    for (let i = 0; i < NUM_DAYS; i++) {
+      const done = [...getDayCards(i)]
+        .filter(c => c.classList.contains('done'))
+        .map(c => c.id);
+      if (done.length) state[`day-${i}`] = done;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  // Restore checkboxes from saved state
+  function restoreState(state) {
+    for (let i = 0; i < NUM_DAYS; i++) {
+      const saved = state[`day-${i}`] || [];
+      saved.forEach(id => {
+        const card = document.getElementById(id);
+        if (card) card.classList.add('done');
+      });
+    }
+  }
+
+  // ── Core helpers ─────────────────────────────────────────────
+  function getDayCards(dayIdx) {
+    return document.querySelectorAll(`#day-${dayIdx} .exercise-card`);
+  }
+
+  function updateDayProgress(dayIdx) {
+    const cards = getDayCards(dayIdx);
+    const total = cards.length;
+    const done = [...cards].filter(c => c.classList.contains('done')).length;
+    const pct = total ? (done / total) * 100 : 0;
+
+    const dpf = document.getElementById(`dpf-${dayIdx}`);
+    const dpl = document.getElementById(`dpl-${dayIdx}`);
+    if (dpf) dpf.style.width = pct + '%';
+    if (dpl) dpl.textContent = `${done} / ${total}`;
+
+    const pill = document.getElementById(`pill-${dayIdx}`);
+    pill.classList.remove('has-progress', 'complete');
+    if (done > 0 && done < total) pill.classList.add('has-progress');
+    if (done === total && total > 0) pill.classList.add('complete');
+
+    if (dayIdx === currentDay) {
+      document.getElementById('doneCount').textContent = done;
+      document.getElementById('totalCount').textContent = total;
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('stripDayLabel').textContent = DAY_NAMES[dayIdx];
+    }
+  }
+
+  function updateAllDays() {
+    for (let i = 0; i < NUM_DAYS; i++) updateDayProgress(i);
+  }
+
+  // ── Public functions (called from HTML) ──────────────────────
+  function switchDay(idx) {
+    document.getElementById(`day-${currentDay}`).classList.remove('active');
+    document.getElementById(`pill-${currentDay}`).classList.remove('active');
+    currentDay = idx;
+    document.getElementById(`day-${currentDay}`).classList.add('active');
+    document.getElementById(`pill-${currentDay}`).classList.add('active');
+    updateDayProgress(currentDay);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleCard(id) {
+    const card = document.getElementById(id);
+    if (!card.classList.contains('done')) {
+      card.classList.toggle('open');
+    }
+  }
+
+  function toggleDone(event, id, dayIdx) {
+    event.stopPropagation();
+    const card = document.getElementById(id);
+    card.classList.toggle('done');
+    card.classList.remove('open');
+    updateDayProgress(dayIdx);
+    saveState();
+  }
+
+  function resetDay() {
+    getDayCards(currentDay).forEach(c => c.classList.remove('done', 'open'));
+    updateDayProgress(currentDay);
+    saveState();
+  }
+
+  // ── Boot ─────────────────────────────────────────────────────
+  // Default to today's day of week (Mon=0 … Sun=6)
+  function getTodayDayIndex() {
+    const jsDay = new Date().getDay(); // 0=Sun
+    return jsDay === 0 ? 6 : jsDay - 1; // Mon=0 … Sun=6
+  }
+
+  const state = loadState();
+  restoreState(state);
+  currentDay = getTodayDayIndex();
+  document.getElementById(`day-${currentDay}`).classList.add('active');
+  document.getElementById(`pill-${currentDay}`).classList.add('active');
+  updateAllDays();
+</script>
+</body>
+</html>
