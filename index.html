@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#2d4f3c">
+<title>Accessory Program</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f7f3ea;
+    --card:#fffdf9;
+    --ink:#22303c;
+    --muted:#6b7884;
+    --line:#e3dccd;
+    --navy:#2d4f3c;
+    --neck:#3b6ea5;
+    --shoulder:#6a72b8;
+    --wrist:#2f8f86;
+    --hip:#6a9a5b;
+    --knee:#c2754e;
+    --ankle:#8a6f2d;
+    --balance:#7a5c8a;
+    --recovery:#4a7a6a;
+    --shadow:0 1px 3px rgba(40,50,60,.06),0 6px 20px rgba(40,50,60,.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Hanken Grotesk",system-ui,sans-serif;
+    font-size:22px;line-height:1.55;
+    padding-bottom:env(safe-area-inset-bottom);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:0 18px 60px;}
+
+  header{
+    padding:30px 18px 18px;text-align:center;
+    background:linear-gradient(180deg,#2d4f3c 0%,#3a6350 100%);
+    color:#f7f3ea;border-radius:0 0 22px 22px;
+    box-shadow:var(--shadow);
+  }
+  header .kicker{font-size:15px;letter-spacing:.22em;text-transform:uppercase;opacity:.7;margin:0 0 4px;}
+  header h1{font-family:"Fraunces",serif;font-weight:600;font-size:38px;line-height:1.05;margin:0;letter-spacing:-.01em;}
+  header .who{font-size:17px;opacity:.78;margin:7px 0 0;}
+
+  .days{display:flex;gap:8px;overflow-x:auto;padding:18px 18px 6px;margin:0 -18px;scrollbar-width:none;}
+  .days::-webkit-scrollbar{display:none;}
+  .day-pill{
+    flex:0 0 auto;border:1.5px solid var(--line);background:var(--card);
+    border-radius:14px;padding:11px 15px;min-width:66px;text-align:center;
+    cursor:pointer;transition:.15s;
+  }
+  .day-pill .dow{font-weight:700;font-size:19px;}
+  .day-pill .fx{font-size:14px;color:var(--muted);margin-top:1px;line-height:1.15;}
+  .day-pill.active{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:var(--shadow);}
+  .day-pill.active .fx{color:rgba(255,255,255,.75);}
+  .day-pill.today:not(.active){border-color:var(--recovery);}
+
+  .toolbar{display:flex;gap:8px;margin:14px 0 4px;flex-wrap:wrap;}
+  .chip{
+    border:1.5px solid var(--line);background:var(--card);color:var(--ink);
+    border-radius:11px;padding:11px 16px;font-size:18px;font-weight:600;cursor:pointer;
+    font-family:inherit;display:inline-flex;align-items:center;gap:6px;
+  }
+  .chip:active{transform:scale(.97);}
+
+  .day-head{margin:20px 2px 6px;}
+  .day-head h2{font-family:"Fraunces",serif;font-weight:600;font-size:30px;margin:0;letter-spacing:-.01em;}
+  .day-head .meta{color:var(--muted);font-size:18px;margin-top:2px;}
+  .progress{height:9px;background:var(--line);border-radius:6px;margin:11px 2px 4px;overflow:hidden;}
+  .progress > i{display:block;height:100%;width:0;background:var(--recovery);border-radius:6px;transition:width .35s ease;}
+  .progress-label{font-size:17px;color:var(--muted);margin:0 2px 14px;}
+
+  .block{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:12px 0;box-shadow:var(--shadow);overflow:hidden;}
+  .block-head{padding:13px 15px 11px;border-left:6px solid var(--neck);}
+  .block-head .tag{font-size:14px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;}
+  .block-head h3{margin:3px 0 0;font-size:23px;font-weight:700;letter-spacing:-.01em;}
+  .block-head .sub{font-size:17px;color:var(--muted);margin-top:2px;}
+
+  .block.neck   .block-head{border-color:var(--neck);}    .block.neck   .tag{color:var(--neck);}
+  .block.shoulder .block-head{border-color:var(--shoulder);} .block.shoulder .tag{color:var(--shoulder);}
+  .block.wrist  .block-head{border-color:var(--wrist);}   .block.wrist  .tag{color:var(--wrist);}
+  .block.hip    .block-head{border-color:var(--hip);}     .block.hip    .tag{color:var(--hip);}
+  .block.knee   .block-head{border-color:var(--knee);}    .block.knee   .tag{color:var(--knee);}
+  .block.ankle  .block-head{border-color:var(--ankle);}   .block.ankle  .tag{color:var(--ankle);}
+  .block.balance .block-head{border-color:var(--balance);} .block.balance .tag{color:var(--balance);}
+  .block.recovery .block-head{border-color:var(--recovery);} .block.recovery .tag{color:var(--recovery);}
+
+  .note-line{margin:0 17px 13px;font-size:18px;color:#46535f;background:#f3efe5;border-radius:10px;padding:9px 11px;}
+
+  ul.ex{list-style:none;margin:0;padding:4px 0 8px;}
+  ul.ex li{
+    display:flex;gap:14px;align-items:flex-start;padding:14px 17px;cursor:pointer;
+    border-top:1px solid #f0ebdf;transition:background .12s;
+  }
+  ul.ex li:first-child{border-top:none;}
+  ul.ex li:active{background:#f6f1e6;}
+  .check{
+    flex:0 0 auto;width:34px;height:34px;border-radius:9px;border:2px solid var(--line);
+    margin-top:1px;display:flex;align-items:center;justify-content:center;
+    transition:.15s;background:#fff;
+  }
+  .check svg{width:20px;height:20px;opacity:0;transform:scale(.5);transition:.15s;}
+  li.done .check{background:var(--recovery);border-color:var(--recovery);}
+  li.done .check svg{opacity:1;transform:scale(1);}
+  li.done .ex-name{text-decoration:line-through;color:var(--muted);}
+  .ex-main{flex:1;min-width:0;}
+  .ex-name{font-weight:600;font-size:21px;line-height:1.3;}
+  .ex-dose{
+    display:inline-block;font-size:18px;font-weight:700;
+    color:var(--recovery);background:#e3f0ea;
+    border-radius:7px;padding:3px 11px;margin-top:6px;font-variant-numeric:tabular-nums;
+  }
+  .ex-cue{font-size:18px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .ex-cue em{color:#5a6671;font-style:italic;}
+
+  .rest-day{text-align:center;padding:34px 20px;color:var(--muted);}
+  .rest-day .big{font-family:"Fraunces",serif;font-size:26px;color:var(--ink);margin-bottom:6px;}
+
+  footer{margin:26px 4px 0;font-size:15px;color:#9aa5af;line-height:1.5;border-top:1px solid var(--line);padding-top:14px;}
+  .editnote{font-size:15px;color:#aab3bc;text-align:center;margin-top:10px;}
+</style>
+</head>
+<body>
+
+<header>
+  <p class="kicker">Daily Accessory Program · 30 min</p>
+  <h1>Movement Medicine</h1>
+  <p class="who">Volleyball · Running · Cycling · Lifting</p>
+</header>
+
+<div class="wrap">
+  <div class="days" id="days"></div>
+  <div class="toolbar">
+    <button class="chip" id="resetBtn">↺ Reset this day</button>
+    <button class="chip" id="todayBtn">◎ Jump to today</button>
+  </div>
+  <div id="dayContent"></div>
+
+  <footer>
+    Tap any exercise to check it off. Progress is saved on this device and resets automatically each week. To update exercises, open this file in a text editor and edit the <b>PROGRAM</b> section near the top of the script.
+    <div class="editnote">Tip: each exercise has a <b>name</b>, <b>dose</b>, and optional <b>cue</b>. Add or remove exercises by copying the pattern.</div>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   PROGRAM DATA — EDIT HERE to change exercises, sets, cues.
+   Each day: { dow, focus, badge, note?, rest?, blocks:[...] }
+   Block kind sets color: neck | shoulder | wrist | hip | knee | ankle | balance | recovery
+   Each exercise: { name, dose, cue }   (cue is optional)
+   Add a "note" string to any block for a callout box.
+   ============================================================ */
+const PROGRAM = [
+
+  { dow:"Mon", focus:"Upper A — Neck · Shoulders · Wrists", badge:"~28 min",
+    blocks:[
+      { kind:"neck", tag:"Neck Mobility & Strength", title:"Neck", sub:"~10 min",
+        ex:[
+          {name:"Neck CARs", dose:"3 reps / side", cue:"Big slow circles; shoulders completely still; 8–10 sec per circle"},
+          {name:"Chin Tuck + Neck Nod", dose:"2 × 12 reps", cue:"Supine; chin glides back (don't crunch down); tiny nod range"},
+          {name:"Isometric Neck Holds — 4 directions", dose:"3 × 10 sec each", cue:"Palm vs. head; no movement; ~70% effort; jaw relaxed; breathe"},
+        ]},
+      { kind:"shoulder", tag:"Shoulder Health", title:"Shoulders", sub:"~10 min",
+        ex:[
+          {name:"Wall Slides", dose:"3 × 10 reps", cue:"Ribs down; back of hands, forearms, elbows all contact wall; squeeze lower traps at top"},
+          {name:"Band Pull-Aparts", dose:"3 × 15 reps", cue:"Lead with pinkies; pause 1 sec at full spread; no band: use a towel"},
+          {name:"Prone Y–T–W", dose:"2 × 8 each shape", cue:"Thumbs up; initiate from shoulder blades; hold 2 sec; don't shrug"},
+        ]},
+      { kind:"wrist", tag:"Wrist Mobility", title:"Wrists", sub:"~8 min",
+        ex:[
+          {name:"Wrist CARs + Pronation / Supination", dose:"2 × 5 each direction", cue:"Slow active end-range; elbow still during rotation; 3-sec hold at end range"},
+          {name:"Wrist Extension Loaded Stretch", dose:"2 × 45 sec / side", cue:"Fingers pointing back; shift weight gently; stretch not pain"},
+          {name:"Fingertip Push-Ups", dose:"2 × 10 reps", cue:"All five fingers spread; wrists neutral; start on knees if needed"},
+        ]},
+    ]},
+
+  { dow:"Tue", focus:"Lower A — Hips · Glutes · Knees", badge:"~30 min",
+    blocks:[
+      { kind:"hip", tag:"Hip Mobility", title:"Hips", sub:"~10 min",
+        ex:[
+          {name:"90/90 Hip Switch", dose:"2 × 5 / side", cue:"Both shins at 90°; torso upright; 3-sec hold each side; the weak direction is the one to work"},
+          {name:"Deep Squat Hold", dose:"2 × 60 sec", cue:"Heels flat (plate under heels is fine); chest up; rotate thoracic, press knees out, explore actively"},
+          {name:"Standing Hip CARs", dose:"3 reps / side", cue:"Hand on wall; trace the largest possible knee circle; pelvis level; reverse direction"},
+        ]},
+      { kind:"hip", tag:"Glute Med Superset", title:"Clamshells → Side Raises", sub:"~10 min · do both sides before moving on",
+        note:"Superset: complete all clamshells on one side, immediately follow with side raises, then flip. Pelvis stays still the entire time.",
+        ex:[
+          {name:"Clamshells", dose:"3 × 20 / side", cue:"Feet together; rotate top knee up; 1–2 sec hold; slow lower; band above knees optional"},
+          {name:"Side-Lying Leg Raises", dose:"3 × 15 / side", cue:"Body in straight line; toes slightly down (internal rotation); 1-sec pause at top; progress with ankle weight"},
+        ]},
+      { kind:"knee", tag:"Knee Strength", title:"Knees", sub:"~10 min",
+        ex:[
+          {name:"Terminal Knee Extensions (TKE)", dose:"3 × 15 / side", cue:"Band behind knee; squeeze inner quad at lockout; don't hyperextend; no band: seated slow extensions"},
+          {name:"Step-Down (Eccentric Decline)", dose:"3 × 10 / side", cue:"3-sec lower; knee tracks over 2nd toe; don't let opposite hip drop"},
+          {name:"Couch Stretch", dose:"2 min / side", cue:"Shin up wall; actively squeeze glute on back leg; torso upright; breathe slowly"},
+        ]},
+    ]},
+
+  { dow:"Wed", focus:"Recovery — Balance · Core · Thoracic", badge:"~25 min",
+    note:"Slower pace today. Hold positions slightly longer than feels comfortable. This is nervous system work, not a workout.",
+    blocks:[
+      { kind:"balance", tag:"Balance & Proprioception", title:"Balance", sub:"~12 min",
+        ex:[
+          {name:"Single-Leg RDL Balance Hold", dose:"3 × 25 sec / side", cue:"Hinge at hip; back leg floats; spine neutral; foot grips floor like a tripod; progress to eyes closed"},
+          {name:"Hip Flexor Lift-Off (Active Psoas)", dose:"3 × 10 / side", cue:"Seated at bench edge; lift knee high without leaning back; 2-sec hold; pull from hip crease not the knee"},
+          {name:"Ankle CARs + Alphabet", dose:"2 min / side", cue:"Seated, foot elevated; circles (5 each direction) then spell the alphabet with your big toe"},
+        ]},
+      { kind:"recovery", tag:"Core & Thoracic", title:"Core & Thoracic Spine", sub:"~13 min",
+        ex:[
+          {name:"Dead Bug (Contralateral)", dose:"3 × 8 / side", cue:"Lower back pressed flat throughout; exhale as limbs lower; reduce range before letting back arch"},
+          {name:"Bear Plank + Shoulder Tap", dose:"3 × 10 taps / side", cue:"Knees 2 inches off floor; zero hip rotation; widen feet if needed; slow down to achieve stillness"},
+          {name:"Standing Thoracic Rotation", dose:"3 × 10 / side", cue:"Arms crossed; hips square; rotate upper body only; exhale at end range for a few extra degrees"},
+          {name:"Toe Yoga + Short Foot", dose:"2 × 60 sec / side", cue:"Lift only big toe (others down), then reverse; short foot: dome arch by pulling ball of foot toward heel"},
+        ]},
+    ]},
+
+  { dow:"Thu", focus:"Lower B — Ankles · Feet · Calves · Hamstrings", badge:"~30 min",
+    blocks:[
+      { kind:"ankle", tag:"Ankle & Foot", title:"Ankles & Feet", sub:"~14 min",
+        ex:[
+          {name:"Ankle CARs + Alphabet", dose:"2 min / side", cue:"Circles (5 each direction) then spell the alphabet; move from the ankle, not the whole leg"},
+          {name:"Knee-to-Wall Dorsiflexion Drill", dose:"3 × 10 / side", cue:"Heel flat the entire time; knee tracks over little toe; record starting distance and track weekly"},
+          {name:"Single-Leg Calf Raise (Slow Eccentric)", dose:"3 × 12 / side", cue:"Step edge; rise on two feet; lower on one; 3-sec descent; straight leg = gastroc, bent = soleus"},
+          {name:"Toe Yoga + Short Foot", dose:"2 × 60 sec / side", cue:"Arch doming; foot proprioception; progress: hold short foot during calf raises"},
+        ]},
+      { kind:"knee", tag:"Knee & Posterior Chain", title:"Knee & Hamstrings", sub:"~16 min",
+        ex:[
+          {name:"Couch Stretch", dose:"2 min / side", cue:"Shin up wall; squeeze glute actively — this is what makes it therapeutic; torso upright"},
+          {name:"Nordic Hamstring Curl Negatives", dose:"3 × 6 reps", cue:"Feet anchored; lower body as plank for 5 sec; catch with hands; hips stay extended throughout"},
+          {name:"Single-Leg RDL Balance Hold", dose:"3 × 20 sec / side", cue:"Hinge at hip; spine neutral; work toward eyes closed"},
+        ]},
+    ]},
+
+  { dow:"Fri", focus:"Upper B — Wrist Strength · Neck · Shoulders", badge:"~30 min",
+    blocks:[
+      { kind:"wrist", tag:"Wrist & Forearm Strength", title:"Wrists & Forearms", sub:"~14 min · the roller goes last — it's a finisher",
+        ex:[
+          {name:"Wrist Curls + Reverse Curls", dose:"3 × 15 each", cue:"Forearm on thigh; light DB or water bottle; full range — wrist drops all the way before curling; slow"},
+          {name:"Forearm Rotation with Offset Load", dose:"3 × 15 each direction", cue:"Hold DB at one end; elbow pinned to side; control through the full arc both ways"},
+          {name:"Fingertip Push-Ups", dose:"3 × 10 reps", cue:"All five fingers spread; wrists neutral; on knees if needed; or hold for 10 sec"},
+          {name:"Wrist Roller — Roll-Up / Roll-Down", dose:"3 × full roll each way", cue:"Start very light (0.5–1 kg); arms at sides; slow unwind is the key; DIY: stick + shoelace + water bottle"},
+        ]},
+      { kind:"neck", tag:"Neck (progressive)", title:"Neck", sub:"~7 min · slightly more than Monday",
+        ex:[
+          {name:"Neck CARs", dose:"3 reps / side", cue:"Full range, slow, shoulders still"},
+          {name:"Isometric Neck Holds — 4 directions", dose:"3 × 15 sec each", cue:"5 sec longer than Monday; same 70% effort; breathe steadily"},
+          {name:"Chin Tuck + Neck Nod", dose:"2 × 15 reps", cue:"3 more reps than Monday; same small range; lengthen back of neck"},
+        ]},
+      { kind:"shoulder", tag:"Shoulder (progressive)", title:"Shoulders", sub:"~9 min · slightly more than Monday",
+        ex:[
+          {name:"Band Pull-Aparts", dose:"3 × 20 reps", cue:"5 more reps or slightly heavier band than Monday; pause at full spread"},
+          {name:"Wall Slides", dose:"3 × 12 reps", cue:"2 more reps than Monday; same full contact cues"},
+        ]},
+    ]},
+
+  { dow:"Sat", focus:"Full Body — One exercise per region", badge:"~30 min",
+    note:"Good pre-game warmup for volleyball, or standalone on an active rest day. One exercise per region keeps it moving — don't linger.",
+    blocks:[
+      { kind:"recovery", tag:"Full Body Circuit", title:"Head-to-Toe Sampler", sub:"Complete in order",
+        ex:[
+          {name:"Neck CARs", dose:"3 reps / side", cue:"Neck — full range circles, shoulders still"},
+          {name:"Wall Slides", dose:"2 × 12 reps", cue:"Shoulders — ribs down, squeeze lower traps at top"},
+          {name:"Wrist CARs + Extension Stretch", dose:"5 circles + 45 sec / side", cue:"Wrists — active end range, then fingers-pointing-back floor stretch"},
+          {name:"Deep Squat Hold", dose:"2 × 60 sec", cue:"Hips — heels flat; rotate, press knees out, explore"},
+          {name:"Clamshells + Side Raises Superset", dose:"2 × 15 each / side", cue:"Glute med — do both on one side then flip; pelvis still"},
+          {name:"Single-Leg Calf Raise (Slow Eccentric)", dose:"3 × 10 / side", cue:"Ankles / Achilles — step edge, 3-sec lower"},
+          {name:"Single-Leg RDL Balance Hold", dose:"3 × 25 sec / side", cue:"Balance — hinge position; eyes closed when ready"},
+          {name:"Standing Thoracic Rotation", dose:"2 × 10 / side", cue:"Thoracic — hips square; exhale at end range"},
+        ]},
+    ]},
+
+  { dow:"Sun", focus:"Rest or Flex Day", badge:"0–20 min", rest:true,
+    blocks:[
+      { kind:"recovery", tag:"Optional", title:"Rest or gentle movement",
+        note:"True rest — or use this day to repeat whatever felt weakest this week, or catch a missed day. If you do anything, the full-body CARs sequence below is the best single investment in the program.",
+        ex:[
+          {name:"Couch Stretch (extended hold)", dose:"3 min / side", cue:"Longer than usual; breathe slowly; squeeze glute; pays dividends all week"},
+          {name:"90/90 Hip Holds (passive)", dose:"2–3 min / side", cue:"Don't switch — just hold and breathe into the restriction; let gravity work"},
+          {name:"Full-Body CARs Sequence", dose:"3 reps / joint / side", cue:"Neck → shoulders → wrists → hips → ankles; slow and deliberate; 10–12 min total; the best longevity investment in the program"},
+        ]},
+    ]},
+];
+
+/* ============================================================
+   APP — no need to edit below this line
+   ============================================================ */
+const STORAGE_KEY = "accessoryProgress_v1";
+const WEEK_KEY    = "accessoryWeekStart_v1";
+
+function getMondayOfWeek() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const mon = new Date(now);
+  mon.setDate(now.getDate() + diff);
+  return mon.toISOString().slice(0, 10);
+}
+
+let state = {};
+try {
+  const savedWeek = localStorage.getItem(WEEK_KEY);
+  const thisWeek  = getMondayOfWeek();
+  if (savedWeek !== thisWeek) {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem(WEEK_KEY, thisWeek);
+  }
+  state = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+} catch(e) { state = {}; }
+
+function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e){} }
+
+const dowOrder = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const todayDow  = dowOrder[new Date().getDay()];
+let selected    = PROGRAM.some(d => d.dow === todayDow) ? todayDow : "Mon";
+
+const daysEl    = document.getElementById("days");
+const contentEl = document.getElementById("dayContent");
+
+const checkSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+function exId(di, bi, ei) { return `${di}-${bi}-${ei}`; }
+
+function renderDays() {
+  daysEl.innerHTML = "";
+  PROGRAM.forEach(day => {
+    const pill = document.createElement("div");
+    pill.className = "day-pill" +
+      (day.dow === selected  ? " active" : "") +
+      (day.dow === todayDow  ? " today"  : "");
+    const shortFocus = day.focus.split("—")[0].trim();
+    pill.innerHTML = `<div class="dow">${day.dow}</div><div class="fx">${day.rest ? "Rest" : shortFocus}</div>`;
+    pill.onclick = () => { selected = day.dow; render(); };
+    daysEl.appendChild(pill);
+  });
+}
+
+function countDay(di, day) {
+  let total = 0, done = 0;
+  day.blocks.forEach((b, bi) => (b.ex || []).forEach((_, ei) => {
+    total++;
+    if (state[exId(di, bi, ei)]) done++;
+  }));
+  return { total, done };
+}
+
+function fullDow(d) {
+  return {Mon:"Monday",Tue:"Tuesday",Wed:"Wednesday",Thu:"Thursday",Fri:"Friday",Sat:"Saturday",Sun:"Sunday"}[d];
+}
+
+function render() {
+  renderDays();
+  const di  = PROGRAM.findIndex(d => d.dow === selected);
+  const day = PROGRAM[di];
+
+  let html = `<div class="day-head"><h2>${fullDow(day.dow)}</h2><div class="meta">${day.focus} · ${day.badge}</div></div>`;
+
+  const { total, done } = countDay(di, day);
+  if (total > 0) {
+    const pct = Math.round(done / total * 100);
+    html += `<div class="progress"><i style="width:${pct}%"></i></div>`;
+    html += `<div class="progress-label">${done} of ${total} done${done === total ? " — great work 🎉" : ""}</div>`;
+  }
+
+  if (day.rest) {
+    const b = day.blocks[0];
+    html += `<div class="block recovery"><div class="block-head" style="border-color:var(--recovery)"><div class="tag" style="color:var(--recovery)">${b.tag}</div><h3>${b.title}</h3></div>`;
+    if (b.note) html += `<div class="note-line">${b.note}</div>`;
+    if (b.ex && b.ex.length) {
+      html += `<ul class="ex">`;
+      b.ex.forEach((e, ei) => {
+        const id = exId(di, 0, ei);
+        const isDone = !!state[id];
+        html += `<li class="${isDone ? "done" : ""}" data-id="${id}">
+          <div class="check">${checkSVG}</div>
+          <div class="ex-main">
+            <div class="ex-name">${e.name}</div>
+            <span class="ex-dose">${e.dose}</span>
+            ${e.cue ? `<div class="ex-cue">${e.cue}</div>` : ""}
+          </div></li>`;
+      });
+      html += `</ul>`;
+    }
+    html += `</div>`;
+    contentEl.innerHTML = html;
+    attachListeners();
+    return;
+  }
+
+  day.blocks.forEach((b, bi) => {
+    html += `<div class="block ${b.kind}">`;
+    html += `<div class="block-head"><div class="tag">${b.tag}</div><h3>${b.title}</h3>${b.sub ? `<div class="sub">${b.sub}</div>` : ""}</div>`;
+    if (b.note) html += `<div class="note-line">${b.note}</div>`;
+    if (b.ex && b.ex.length) {
+      html += `<ul class="ex">`;
+      b.ex.forEach((e, ei) => {
+        const id = exId(di, bi, ei);
+        const isDone = !!state[id];
+        html += `<li class="${isDone ? "done" : ""}" data-id="${id}">
+          <div class="check">${checkSVG}</div>
+          <div class="ex-main">
+            <div class="ex-name">${e.name}</div>
+            <span class="ex-dose">${e.dose}</span>
+            ${e.cue ? `<div class="ex-cue">${e.cue}</div>` : ""}
+          </div></li>`;
+      });
+      html += `</ul>`;
+    }
+    html += `</div>`;
+  });
+
+  contentEl.innerHTML = html;
+  attachListeners();
+}
+
+function attachListeners() {
+  contentEl.querySelectorAll("li[data-id]").forEach(li => {
+    li.addEventListener("click", () => {
+      const id = li.dataset.id;
+      state[id] = !state[id];
+      if (!state[id]) delete state[id];
+      save();
+      render();
+    });
+  });
+}
+
+document.getElementById("resetBtn").onclick = () => {
+  const di  = PROGRAM.findIndex(d => d.dow === selected);
+  const day = PROGRAM[di];
+  day.blocks.forEach((b, bi) => (b.ex || []).forEach((_, ei) => delete state[exId(di, bi, ei)]));
+  save(); render();
+};
+
+document.getElementById("todayBtn").onclick = () => {
+  if (PROGRAM.some(d => d.dow === todayDow)) { selected = todayDow; render(); }
+};
+
+render();
+</script>
+</body>
+</html>
